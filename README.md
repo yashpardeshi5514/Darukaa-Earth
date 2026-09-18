@@ -1,237 +1,584 @@
-# Darukaa.Earth
+Darukaa.Earth
 
 A full-stack geospatial data analytics platform for monitoring carbon and biodiversity projects.
 
-## Overview
-
-Darukaa.Earth allows administrators to:
-
-- Create and manage environmental projects
-- Add multiple geographic sites to projects
-- Draw site boundaries directly on an interactive Mapbox map
-- Store geographic polygons using PostgreSQL + PostGIS
-- View project sites on a map
-- Select individual sites
-- View carbon and biodiversity performance over time
-- Authenticate securely using JWT
-
-## Tech Stack
-
-### Frontend
-
-- React
-- Vite
-- Mapbox GL JS
-- Mapbox GL Draw
-- Chart.js
-- React Chart.js 2
-
-### Backend
-
-- Python
-- FastAPI
-- SQLAlchemy
-- JWT authentication
-- GeoAlchemy2
-- Shapely
-
-### Database
-
-- PostgreSQL
-- PostGIS
-
-## Architecture
-
-```text
-                    ┌─────────────────────┐
-                    │      React UI       │
-                    │                     │
-                    │ Mapbox + Chart.js   │
-                    └──────────┬──────────┘
-                               │
-                               │ REST API
-                               ▼
-                    ┌─────────────────────┐
-                    │      FastAPI        │
-                    │                     │
-                    │ Auth / Projects     │
-                    │ Sites / Analytics   │
-                    └──────────┬──────────┘
-                               │
-                               │ SQLAlchemy
-                               ▼
-                    ┌─────────────────────┐
-                    │ PostgreSQL +        │
-                    │      PostGIS        │
-                    │                     │
-                    │ Users               │
-                    │ Projects            │
-                    │ Sites               │
-                    │ Analytics           │
-                    └─────────────────────┘
 
 
-Database Schema
+
+
+
+
+🌍 Overview
+
+Darukaa.Earth is a full-stack geospatial analytics platform designed for carbon and biodiversity projects.
+
+The platform allows administrators to:
+
+Create and manage environmental projects
+
+Add multiple geographic sites to projects
+
+Draw site boundaries directly on an interactive map
+
+Store geographic polygons using PostgreSQL + PostGIS
+
+View project sites on an interactive map
+
+Select individual sites and inspect their details
+
+View carbon and biodiversity performance over time
+
+Authenticate users securely using JWT
+
+✨ Features
+
+🔐 Authentication
+
+User registration
+
+JWT-based authentication
+
+Password hashing using bcrypt
+
+Protected API endpoints
+
+User-specific project access
+
+📁 Project Management
+
+Create projects
+
+View projects
+
+Update projects
+
+Delete projects
+
+Associate multiple geographic sites with each project
+
+🗺️ Geospatial Mapping
+
+Interactive Mapbox map
+
+Draw site boundaries using Mapbox GL Draw
+
+Polygon validation using Shapely
+
+PostGIS polygon storage
+
+GeoJSON API responses
+
+Interactive site selection
+
+📊 Analytics
+
+Site-level analytics
+
+Yearly carbon values
+
+Yearly biodiversity index
+
+Interactive Chart.js visualizations
+
+Performance trends over time
+
+⚙️ Developer Experience
+
+React + Vite frontend
+
+FastAPI backend
+
+PostgreSQL + PostGIS
+
+GitHub Actions CI
+
+Environment-based configuration
+
+Production deployment using Vercel and Render
+
+🏗️ Architecture
+
+┌─────────────────────────────────────┐
+│             React UI                │
+│                                     │
+│       Mapbox GL JS + Chart.js       │
+└──────────────────┬──────────────────┘
+                   │
+                   │ REST API / HTTPS
+                   ▼
+┌─────────────────────────────────────┐
+│             FastAPI                 │
+│                                     │
+│  Authentication                     │
+│  Projects                            │
+│  Sites                               │
+│  Analytics                           │
+└──────────────────┬──────────────────┘
+                   │
+                   │ SQLAlchemy
+                   ▼
+┌─────────────────────────────────────┐
+│       PostgreSQL + PostGIS          │
+│                                     │
+│  Users                              │
+│  Projects                           │
+│  Sites                              │
+│  Analytics                          │
+└─────────────────────────────────────┘
+
+Production Deployment
+
+                   Internet
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+          ▼                       ▼
+     Vercel                    Render
+   React Frontend           FastAPI Backend
+                                  │
+                                  ▼
+                         PostgreSQL + PostGIS
+
+🛠️ Tech Stack
+
+Layer
+
+Technologies
+
+Frontend
+
+React, Vite, Tailwind CSS
+
+Mapping
+
+Mapbox GL JS, Mapbox GL Draw
+
+Charts
+
+Chart.js, react-chartjs-2
+
+Backend
+
+Python, FastAPI, Uvicorn
+
+ORM
+
+SQLAlchemy
+
+Geospatial
+
+GeoAlchemy2, Shapely
+
+Database
+
+PostgreSQL, PostGIS
+
+Authentication
+
+JWT, bcrypt/passlib
+
+CI
+
+GitHub Actions
+
+Frontend Deployment
+
+Vercel
+
+Backend Deployment
+
+Render
+
+Database Hosting
+
+Render PostgreSQL
+
+🗃️ Database Schema
+
+The application uses four core entities.
+
 Users
-| Column        | Type     |
-| ------------- | -------- |
-| id            | Integer  |
-| name          | String   |
-| email         | String   |
-| password_hash | String   |
-| created_at    | DateTime |
+
+Column
+
+Type
+
+Description
+
+id
+
+Integer
+
+Primary key
+
+name
+
+String
+
+User name
+
+email
+
+String
+
+Unique email
+
+password_hash
+
+String
+
+Bcrypt password hash
+
+created_at
+
+DateTime
+
+Account creation time
 
 Projects
-| Column       | Type        |
-| ------------ | ----------- |
-| id           | Integer     |
-| name         | String      |
-| description  | String      |
-| project_type | String      |
-| status       | String      |
-| created_by   | Foreign Key |
-| created_at   | DateTime    |
+
+Column
+
+Type
+
+Description
+
+id
+
+Integer
+
+Primary key
+
+name
+
+String
+
+Project name
+
+description
+
+String
+
+Project description
+
+project_type
+
+String
+
+Type of project
+
+status
+
+String
+
+Project status
+
+created_by
+
+Foreign Key
+
+Project owner
+
+created_at
+
+DateTime
+
+Creation time
 
 Sites
-| Column        | Type            |
-| ------------- | --------------- |
-| id            | Integer         |
-| project_id    | Foreign Key     |
-| name          | String          |
-| description   | String          |
-| geometry      | PostGIS Polygon |
-| area_hectares | Integer         |
-| created_at    | DateTime        |
+
+Column
+
+Type
+
+Description
+
+id
+
+Integer
+
+Primary key
+
+project_id
+
+Foreign Key
+
+Associated project
+
+name
+
+String
+
+Site name
+
+description
+
+String
+
+Site description
+
+geometry
+
+PostGIS Polygon
+
+Geographic boundary
+
+area_hectares
+
+Integer
+
+Site area
+
+created_at
+
+DateTime
+
+Creation time
 
 Analytics
-| Column             | Type        |
-| ------------------ | ----------- |
-| id                 | Integer     |
-| site_id            | Foreign Key |
-| year               | Integer     |
-| carbon_value       | Integer     |
-| biodiversity_index | Integer     |
-| created_at         | DateTime    |
 
-API Endpoints
+Column
+
+Type
+
+Description
+
+id
+
+Integer
+
+Primary key
+
+site_id
+
+Foreign Key
+
+Associated site
+
+year
+
+Integer
+
+Observation year
+
+carbon_value
+
+Integer
+
+Carbon metric
+
+biodiversity_index
+
+Integer
+
+Biodiversity metric
+
+created_at
+
+DateTime
+
+Record creation time
+
+🔌 API Endpoints
+
 Authentication
-POST /auth/register
-POST /auth/login
-GET  /auth/me
+
+Method
+
+Endpoint
+
+Description
+
+POST
+
+/auth/register
+
+Register a user
+
+POST
+
+/auth/login
+
+Authenticate and receive JWT
+
+GET
+
+/auth/me
+
+Get authenticated user
 
 Projects
-POST   /projects/
-GET    /projects/
-GET    /projects/{project_id}
-PUT    /projects/{project_id}
-DELETE /projects/{project_id}
+
+Method
+
+Endpoint
+
+Description
+
+POST
+
+/projects/
+
+Create project
+
+GET
+
+/projects/
+
+List user's projects
+
+GET
+
+/projects/{project_id}
+
+Get project
+
+PUT
+
+/projects/{project_id}
+
+Update project
+
+DELETE
+
+/projects/{project_id}
+
+Delete project
 
 Sites
-POST   /sites/{project_id}
-GET    /sites/project/{project_id}
-GET    /sites/{site_id}
-GET    /sites/project/{project_id}/geojson
-DELETE /sites/{site_id}
+
+Method
+
+Endpoint
+
+Description
+
+POST
+
+/sites/{project_id}
+
+Create geographic site
+
+GET
+
+/sites/project/{project_id}
+
+List project sites
+
+GET
+
+/sites/{site_id}
+
+Get site
+
+GET
+
+/sites/project/{project_id}/geojson
+
+Get sites as GeoJSON
+
+DELETE
+
+/sites/{site_id}
+
+Delete site
 
 Analytics
-GET /analytics/site/{site_id}
 
-Local Setup
+Method
 
-Prerequisites
-Node.js
-Python 3
-PostgreSQL
-PostGIS
+Endpoint
 
-Clone the repository
-git clone <repository-url>
-cd Darukaa-Earth
+Description
 
-Backend Setup
-cd backend
+GET
 
-python -m venv venv
+/analytics/site/{site_id}
 
-Windows
-.\venv\Scripts\Activate.ps1
+Get site analytics
 
-Install dependencies:
-pip install -r requirements.txt
+Health
 
-Create .env:
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/darukaa_earth
+Method
 
-Start the backend:
-uvicorn main:app --reload
+Endpoint
 
-Backend:
-http://127.0.0.1:8000
+Description
 
-Swagger documentation:
-http://127.0.0.1:8000/docs
+GET
 
-Frontend Setup
-cd frontend
-npm install
+/health
 
-Create .env.local:
-VITE_API_URL=http://127.0.0.1:8000
-VITE_MAPBOX_TOKEN=YOUR_MAPBOX_TOKEN
+API and database health check
 
-Start the frontend:
-npm run dev
+🗺️ Geospatial Workflow
 
-Frontend:
-http://localhost:5173
-
-Authentication
-The application uses JWT bearer authentication.
-After login, the access token is stored in the browser's local storage and sent with protected API requests.
-
-Geospatial Workflow
-Site boundaries are created using Mapbox GL Draw.
-The resulting GeoJSON polygon is sent to FastAPI.
-FastAPI validates the polygon using Shapely and stores it as a PostGIS geometry using GeoAlchemy2.
-The backend can convert the stored PostGIS geometry back to GeoJSON for Mapbox rendering.
-
-Mapbox Draw
-     ↓
+Mapbox GL Draw
+       │
+       ▼
 GeoJSON Polygon
-     ↓
-FastAPI
-     ↓
-Shapely validation
-     ↓
-PostGIS
-     ↓
-GeoJSON
-     ↓
-Mapbox
+       │
+       ▼
+FastAPI API
+       │
+       ▼
+Shapely Validation
+       │
+       ▼
+GeoAlchemy2
+       │
+       ▼
+PostgreSQL + PostGIS
+       │
+       ▼
+GeoJSON FeatureCollection
+       │
+       ▼
+Mapbox Rendering
 
+How it works
 
-Analytics
-Site analytics are stored by year and include:
+An administrator selects a project.
+
+The administrator activates polygon drawing.
+
+A geographic boundary is drawn on the Mapbox map.
+
+Mapbox produces a GeoJSON polygon.
+
+The polygon is sent to the FastAPI backend.
+
+Shapely validates the geometry.
+
+GeoAlchemy2 stores the polygon in PostGIS.
+
+The backend can return the stored geometry as GeoJSON.
+
+The frontend renders the saved site on the map.
+
+📈 Analytics
+
+Analytics are associated with individual sites and stored by year.
+
+The current model contains:
 
 Carbon value
+
 Biodiversity index
 
-Chart.js displays the site's performance over time after selecting a site.
+Observation year
 
-Environment Variables
-Never commit real credentials.
+Chart.js is used to display performance trends after selecting a site.
 
+Note: The current analytics dataset contains demonstration values for the product workflow and should not be interpreted as real-world environmental measurements.
 
-Required backend:
-DATABASE_URL=
-
-Required frontend:
-VITE_API_URL=
-VITE_MAPBOX_TOKEN=
-
-Project Structure
+📂 Project Structure
 
 Darukaa-Earth/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── frontend/
 │   ├── src/
@@ -240,8 +587,11 @@ Darukaa-Earth/
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── Login.jsx
 │   │   │   └── MapView.jsx
+│   │   │
 │   │   └── App.jsx
-│   └── package.json
+│   │
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── backend/
 │   ├── routes/
@@ -249,6 +599,7 @@ Darukaa-Earth/
 │   │   ├── project_routes.py
 │   │   ├── site_routes.py
 │   │   └── analytics_routes.py
+│   │
 │   ├── auth.py
 │   ├── database.py
 │   ├── models.py
@@ -259,55 +610,269 @@ Darukaa-Earth/
 ├── .gitignore
 └── README.md
 
+🚀 Local Setup
 
-Demo Workflow
-Register an account.
-Login.
-Open the project dashboard.
-View project sites on the Mapbox map.
-Draw a new geographic site polygon.
-Save the site.
-Select a site.
-View its analytics and performance over time.
-Security Notes
-Database credentials are stored in environment variables.
-JWT authentication protects private API endpoints.
-Frontend environment files are excluded from Git.
-Passwords are stored as bcrypt hashes rather than plaintext.
-Future Improvements
-Dynamic project/site creation UI
-Advanced spatial analytics
-Real environmental datasets
-Role-based access control
-Production database migrations with Alembic
-Automated deployment
-More detailed biodiversity and carbon metrics
+Prerequisites
 
+Make sure you have installed:
 
+Node.js 20+
 
-## 23.2 — Create `requirements.txt`
+Python 3.12+
 
-This is important because the README tells another developer to run `pip install -r requirements.txt`.
+PostgreSQL
 
-Open:
+PostGIS
 
-```text
-D:\Projects\Darukaa-Earth\backend
+Git
 
+A Mapbox access token
+
+1. Clone the repository
+
+git clone https://github.com/yashpardeshi5514/Darukaa-Earth.git
+cd Darukaa-Earth
+
+2. Backend Setup
+
+Navigate to the backend:
+
+cd backend
+
+Create a virtual environment:
+
+python -m venv venv
+
+Windows
+
+.\venv\Scripts\Activate.ps1
+
+Install dependencies:
+
+pip install -r requirements.txt
 
 Create:
-requirements.txt
 
-Put:
-fastapi
-uvicorn[standard]
-sqlalchemy
-psycopg2-binary
-python-dotenv
-python-jose[cryptography]
-passlib[bcrypt]
-bcrypt==4.0.1
-python-multipart
-email-validator
-geoalchemy2
-shapely
+backend/.env
+
+Add:
+
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/darukaa_earth
+SECRET_KEY=YOUR_SECRET_KEY
+
+Make sure PostGIS is enabled:
+
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+Start the backend:
+
+uvicorn main:app --reload
+
+Backend:
+
+http://127.0.0.1:8000
+
+Swagger API documentation:
+
+http://127.0.0.1:8000/docs
+
+Health check:
+
+http://127.0.0.1:8000/health
+
+3. Frontend Setup
+
+Open a new terminal:
+
+cd Darukaa-Earth/frontend
+
+Install dependencies:
+
+npm install
+
+Create:
+
+frontend/.env.local
+
+Add:
+
+VITE_API_URL=http://127.0.0.1:8000
+VITE_MAPBOX_TOKEN=YOUR_MAPBOX_TOKEN
+
+Start the frontend:
+
+npm run dev
+
+Frontend:
+
+http://localhost:5173
+
+🔐 Environment Variables
+
+Backend
+
+DATABASE_URL=
+SECRET_KEY=
+
+Frontend
+
+VITE_API_URL=
+VITE_MAPBOX_TOKEN=
+
+Never commit real credentials, database URLs, API keys, or secrets to GitHub.
+
+Local environment files are excluded from Git using .gitignore.
+
+🔑 Authentication Flow
+
+Register
+   │
+   ▼
+Password → bcrypt hash
+   │
+   ▼
+PostgreSQL
+   │
+   ▼
+Login
+   │
+   ▼
+JWT Access Token
+   │
+   ▼
+Protected API Requests
+
+The JWT is used as a bearer token for protected API requests.
+
+🔄 Demo Workflow
+
+Open the live application.
+
+Register an account.
+
+Log in.
+
+Open the project dashboard.
+
+View project sites on the Mapbox map.
+
+Select a project.
+
+Draw a new geographic site polygon.
+
+Save the site.
+
+Select the site.
+
+View site analytics and performance over time.
+
+🧪 CI / GitHub Actions
+
+GitHub Actions runs on pushes and pull requests targeting main.
+
+Frontend CI
+
+Checkout
+   ↓
+Setup Node.js
+   ↓
+npm ci
+   ↓
+npm run build
+
+Backend CI
+
+Checkout
+   ↓
+Setup Python
+   ↓
+Install requirements
+   ↓
+python -m compileall .
+
+Workflow:
+
+.github/workflows/ci.yml
+
+☁️ Deployment
+
+Frontend
+
+Deployed using Vercel.
+
+Live application:
+
+https://darukaa-earth-delta.vercel.app/
+
+Backend
+
+Deployed using Render.
+
+The backend provides:
+
+/health
+/docs
+
+for health verification and interactive API documentation.
+
+Database
+
+Production database:
+
+PostgreSQL + PostGIS
+
+Hosted using Render PostgreSQL.
+
+🔒 Security
+
+Passwords are stored as bcrypt hashes.
+
+JWT protects authenticated API endpoints.
+
+Database credentials are stored in environment variables.
+
+JWT secrets are stored in environment variables.
+
+Frontend environment files are excluded from Git.
+
+Production CORS is configured for the deployed frontend.
+
+Secrets are not included in this repository.
+
+🛣️ Future Improvements
+
+Alembic database migrations
+
+More comprehensive automated tests
+
+Advanced spatial analytics
+
+Real environmental datasets
+
+Role-based access control
+
+Richer carbon and biodiversity metrics
+
+Expanded project and site management
+
+Automated production deployment improvements
+
+More detailed site performance reporting
+
+🌐 Links
+
+Resource
+
+Link
+
+Live Demo
+
+https://darukaa-earth-delta.vercel.app/
+
+GitHub Repository
+
+https://github.com/yashpardeshi5514/Darukaa-Earth
+
+📄 License
+
+This project was developed as part of the Darukaa.Earth Full-Stack Developer Hackathon Challenge.
