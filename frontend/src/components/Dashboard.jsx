@@ -43,7 +43,15 @@ function Dashboard() {
 
       const projectsData = await projectsResponse.json();
 
-      setProjects(projectsData.projects || []);
+      const projectList = projectsData.projects || [];
+      setProjects(projectList);
+
+      if (
+        projectList.length > 0 &&
+        !projectList.some((project) => project.id === selectedProjectId)
+      ) {
+        setSelectedProjectId(projectList[0].id);
+      }
 
 
       const sitesResponse = await fetch(
