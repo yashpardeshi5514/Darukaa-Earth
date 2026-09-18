@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from database import get_db
 from models import Analytics, Site, Project
 from auth import get_current_user
+from gbif_service import get_biodiversity_data
 
 
 router = APIRouter(
@@ -34,6 +36,9 @@ def get_site_analytics(
             detail="Site not found"
         )
 
+    # ---------------------------------------------------------
+    # Existing stored analytics
+    # ---------------------------------------------------------
     analytics = (
         db.query(Analytics)
         .filter(Analytics.site_id == site_id)
@@ -41,11 +46,33 @@ def get_site_analytics(
         .all()
     )
 
+    # ---------------------------------------------------------
+    # Fetch real biodiversity observations from GBIF
+    # ---------------------------------------------------------
+    polygon_wkt = db.query(
+        func.ST_AsText(Site.geometry)
+    ).filter(
+        Site.id == site_id
+    ).scalar()
+
+    real_biodiversity = None
+
+    if polygon_wkt:
+        try:
+            real_biodiversity = get_biodiversity_data(
+                polygon_wkt
+            )
+        except Exception as error:
+            print(
+                f"GBIF ERROR for site {site_id}: {error}"
+            )
+
     return {
         "site": {
             "id": site.id,
             "name": site.name
         },
+
         "analytics": [
             {
                 "year": item.year,
@@ -53,5 +80,7 @@ def get_site_analytics(
                 "biodiversity_index": item.biodiversity_index
             }
             for item in analytics
-        ]
+        ],
+
+        "real_biodiversity": real_biodiversity
     }

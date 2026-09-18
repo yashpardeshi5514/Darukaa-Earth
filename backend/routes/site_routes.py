@@ -6,6 +6,7 @@ from shapely.geometry import shape, mapping
 from database import get_db
 from models import Site, Project
 from auth import get_current_user
+from gbif_service import get_biodiversity_data
 
 
 router = APIRouter(
@@ -67,6 +68,27 @@ def create_site(
     db.commit()
     db.refresh(site)
 
+    # Fetch real biodiversity observations for this site's polygon.
+    # GBIF data is returned directly to the client; it is not stored
+    # in the Analytics table, so it cannot be mistaken for carbon data
+    # or a synthetic biodiversity index.
+    biodiversity_data = None
+
+    try:
+        polygon_wkt = polygon.wkt
+        biodiversity_data = get_biodiversity_data(polygon_wkt)
+
+    except Exception as error:
+        # The site remains valid even if the external GBIF service
+        # is temporarily unavailable.
+        biodiversity_data = {
+            "total_observations": 0,
+            "species_count": 0,
+            "yearly_observations": {},
+            "sample_size": 0,
+            "error": str(error)
+        }
+
     return {
         "message": "Site created successfully",
         "site": {
@@ -74,7 +96,8 @@ def create_site(
             "project_id": site.project_id,
             "name": site.name,
             "description": site.description
-        }
+        },
+        "biodiversity": biodiversity_data
     }
 
 

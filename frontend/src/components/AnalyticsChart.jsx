@@ -35,6 +35,7 @@ ChartJS.register(
 
 function AnalyticsChart({ siteId }) {
   const [analytics, setAnalytics] = useState([]);
+  const [realBiodiversity, setRealBiodiversity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,6 +43,7 @@ function AnalyticsChart({ siteId }) {
   useEffect(() => {
     if (!siteId) {
       setAnalytics([]);
+      setRealBiodiversity(null);
       return;
     }
 
@@ -76,6 +78,7 @@ function AnalyticsChart({ siteId }) {
 
 
         setAnalytics(data.analytics || []);
+        setRealBiodiversity(data.real_biodiversity || null);
 
       } catch (err) {
         console.error("Analytics error:", err);
@@ -158,7 +161,7 @@ function AnalyticsChart({ siteId }) {
   }
 
 
-  if (analytics.length === 0) {
+  if (analytics.length === 0 && !realBiodiversity) {
     return (
       <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
 
@@ -181,55 +184,85 @@ function AnalyticsChart({ siteId }) {
   }
 
 
-  const labels = analytics.map(
-    (item) => item.year
+  // ---------------------------------------------------------
+  // Carbon data remains based on stored project analytics.
+  // Biodiversity data is now sourced directly from GBIF.
+  // ---------------------------------------------------------
+
+  const carbonAnalytics = analytics.filter(
+    (item) => item.carbon_value !== null && item.carbon_value !== undefined
   );
 
+  const carbonLabels = carbonAnalytics.map((item) => item.year);
 
-  const carbonValues = analytics.map(
+  const carbonValues = carbonAnalytics.map(
     (item) => item.carbon_value
   );
 
+  const gbifYearlyObservations =
+    realBiodiversity?.yearly_observations || {};
 
-  const biodiversityValues = analytics.map(
-    (item) => item.biodiversity_index
+  const gbifYears = Object.keys(gbifYearlyObservations)
+    .map(Number)
+    .filter((year) => Number.isFinite(year))
+    .sort((a, b) => a - b);
+
+  const gbifValues = gbifYears.map(
+    (year) => gbifYearlyObservations[String(year)]
   );
 
+  const latestCarbon =
+    carbonAnalytics.length > 0
+      ? carbonAnalytics[carbonAnalytics.length - 1]
+      : null;
 
-  const latest = analytics[analytics.length - 1];
-
-
-  const first = analytics[0];
-
+  const firstCarbon =
+    carbonAnalytics.length > 0
+      ? carbonAnalytics[0]
+      : null;
 
   const carbonChange =
-    first?.carbon_value
+    firstCarbon?.carbon_value
       ? (
-          ((latest.carbon_value - first.carbon_value) /
-            first.carbon_value) *
+          ((latestCarbon.carbon_value - firstCarbon.carbon_value) /
+            firstCarbon.carbon_value) *
           100
         ).toFixed(1)
       : "0.0";
 
+  const latestGbifYear =
+    gbifYears.length > 0
+      ? gbifYears[gbifYears.length - 1]
+      : null;
 
-  const biodiversityChange =
-    first?.biodiversity_index
-      ? (
-          ((latest.biodiversity_index -
-            first.biodiversity_index) /
-            first.biodiversity_index) *
-          100
-        ).toFixed(1)
-      : "0.0";
+  const latestGbifObservationCount =
+    latestGbifYear !== null
+      ? gbifYearlyObservations[String(latestGbifYear)]
+      : 0;
 
+  const chartLabels = Array.from(
+    new Set([...carbonLabels, ...gbifYears])
+  ).sort((a, b) => a - b);
+
+  const carbonChartValues = chartLabels.map((year) => {
+    const record = carbonAnalytics.find(
+      (item) => item.year === year
+    );
+
+    return record ? record.carbon_value : null;
+  });
+
+  const gbifChartValues = chartLabels.map(
+    (year) => gbifYearlyObservations[String(year)] ?? null
+  );
 
   const chartData = {
-    labels,
+    labels: chartLabels,
 
     datasets: [
       {
         label: "Carbon",
-        data: carbonValues,
+        data: carbonChartValues,
         borderColor: "#34d399",
         backgroundColor: "rgba(52, 211, 153, 0.08)",
         pointBackgroundColor: "#34d399",
@@ -239,11 +272,12 @@ function AnalyticsChart({ siteId }) {
         pointHoverRadius: 6,
         borderWidth: 2.5,
         tension: 0.4,
-        fill: true
+        fill: true,
+        spanGaps: false
       },
       {
-        label: "Biodiversity",
-        data: biodiversityValues,
+        label: "GBIF Observations",
+        data: gbifChartValues,
         borderColor: "#60a5fa",
         backgroundColor: "rgba(96, 165, 250, 0.04)",
         pointBackgroundColor: "#60a5fa",
@@ -253,7 +287,8 @@ function AnalyticsChart({ siteId }) {
         pointHoverRadius: 6,
         borderWidth: 2.5,
         tension: 0.4,
-        fill: true
+        fill: true,
+        spanGaps: false
       }
     ]
   };
@@ -341,7 +376,6 @@ function AnalyticsChart({ siteId }) {
       {/* Analytics summary */}
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
 
-
         {/* Latest carbon */}
         <div className="rounded-xl border border-white/[0.06] bg-[#0b1511] p-4">
 
@@ -376,26 +410,28 @@ function AnalyticsChart({ siteId }) {
             <div>
 
               <p className="text-xl font-semibold text-white">
-                {latest.carbon_value}
+                {latestCarbon ? latestCarbon.carbon_value : "—"}
               </p>
 
               <p className="mt-0.5 text-[10px] text-slate-600">
-                latest value
+                latest stored value
               </p>
 
             </div>
 
 
-            <span className="text-xs font-medium text-emerald-400">
-              +{carbonChange}%
-            </span>
+            {latestCarbon && (
+              <span className="text-xs font-medium text-emerald-400">
+                +{carbonChange}%
+              </span>
+            )}
 
           </div>
 
         </div>
 
 
-        {/* Biodiversity */}
+        {/* Real GBIF biodiversity observations */}
         <div className="rounded-xl border border-white/[0.06] bg-[#0b1511] p-4">
 
           <div className="flex items-center justify-between">
@@ -410,7 +446,7 @@ function AnalyticsChart({ siteId }) {
               </div>
 
               <span className="text-xs text-slate-500">
-                Biodiversity
+                GBIF Observations
               </span>
 
             </div>
@@ -429,19 +465,23 @@ function AnalyticsChart({ siteId }) {
             <div>
 
               <p className="text-xl font-semibold text-white">
-                {latest.biodiversity_index}
+                {realBiodiversity
+                  ? realBiodiversity.total_observations.toLocaleString()
+                  : "—"}
               </p>
 
               <p className="mt-0.5 text-[10px] text-slate-600">
-                latest index
+                total occurrence records
               </p>
 
             </div>
 
 
-            <span className="text-xs font-medium text-sky-400">
-              +{biodiversityChange}%
-            </span>
+            {latestGbifYear !== null && (
+              <span className="text-xs font-medium text-sky-400">
+                {latestGbifObservationCount.toLocaleString()} in {latestGbifYear}
+              </span>
+            )}
 
           </div>
 
@@ -461,24 +501,60 @@ function AnalyticsChart({ siteId }) {
             </div>
 
             <span className="text-xs text-slate-500">
-              Observation Period
+              GBIF Observation Period
             </span>
 
           </div>
 
 
           <p className="mt-3 text-xl font-semibold text-white">
-            {first.year}–{latest.year}
+            {gbifYears.length > 0
+              ? `${gbifYears[0]}–${gbifYears[gbifYears.length - 1]}`
+              : "—"}
           </p>
 
 
           <p className="mt-0.5 text-[10px] text-slate-600">
-            {analytics.length} recorded observations
+            {gbifYears.length} recorded years from GBIF
           </p>
 
         </div>
 
       </div>
+
+
+      {/* Real GBIF biodiversity summary */}
+      {realBiodiversity && (
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+            <div className="text-sm text-slate-400">
+              Recorded Species
+            </div>
+
+            <div className="mt-2 text-2xl font-bold text-white">
+              {realBiodiversity.species_count.toLocaleString()}
+            </div>
+
+            <div className="mt-1 text-xs text-slate-500">
+              Distinct species in the sampled GBIF records
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+            <div className="text-sm text-slate-400">
+              GBIF Sample Size
+            </div>
+
+            <div className="mt-2 text-2xl font-bold text-white">
+              {realBiodiversity.sample_size.toLocaleString()}
+            </div>
+
+            <div className="mt-1 text-xs text-slate-500">
+              Records used for species analysis
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Chart */}
